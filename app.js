@@ -15,6 +15,19 @@ async function fetchGeoJSON() {
   }
 }
 
+// function to show municipality name on hower
+function onEachFeature(feature, layer) {
+  // check that the necessary properties exist
+  if (!(feature.properties && feature.properties.name)) {
+    return; 
+  }
+  // show the municipality name
+  layer.bindTooltip(feature.properties.name, {
+      permanent: false,  
+      direction: 'center', 
+  });
+}
+
 // main function
 async function main() {
   // initialize the map
@@ -26,9 +39,8 @@ async function main() {
   var geoJSONData = await fetchGeoJSON(); 
   // add GeoJSON layer to the map
   var geoJsonLayer = L.geoJSON(geoJSONData, {
-      style: {
-        weight: 2
-      }
+      style: {weight: 2},
+      onEachFeature: onEachFeature
   }).addTo(map);
   // fit the map to the GeoJSON data bounds
   map.fitBounds(geoJsonLayer.getBounds());
