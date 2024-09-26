@@ -69,6 +69,32 @@ function getNegativeMigrationData(municipalityName) {
   return "Not available"; 
 }
 
+// function to calculate the color based on the migration data
+function calculateColor(positive, negative) {
+    if (negative === 0) return 'hsl(120, 75%, 50%)'; 
+    // calculate hue
+    let hue = Math.min(Math.pow(positive / negative, 3) * 60, 120);
+    return `hsl(${hue}, 75%, 50%)`;
+}
+
+// function that returns the styling options for each municipality
+function style(feature) {
+  // check that the necessary properties exist
+  if (!(feature.properties && feature.properties.name)) {
+    return; 
+  }
+  const municipalityName = feature.properties.name;
+  const positive = getPositiveMigrationData(municipalityName) || 0; 
+  const negative = getNegativeMigrationData(municipalityName) || 1;
+  const fillColor = calculateColor(positive, negative);
+  return {
+      weight: 2,
+      color: '#666',
+      fillOpacity: 0.7,
+      fillColor: fillColor
+  };
+}
+
 // function to show municipality name on hower
 function onEachFeature(feature, layer) {
   // check that the necessary properties exist
@@ -82,8 +108,8 @@ function onEachFeature(feature, layer) {
   });
   // show migration data on popup
   municipalityName = feature.properties.name; 
-  positiveMigration = getPositiveMigrationData(feature.properties.name);
-  negativeMigration = getNegativeMigrationData(feature.properties.name);
+  positiveMigration = getPositiveMigrationData(municipalityName);
+  negativeMigration = getNegativeMigrationData(municipalityName);
   popupContent = 
     `<ul>
       <li>Municipality name: ${municipalityName}</li>
@@ -99,6 +125,7 @@ async function main() {
   posMigData = await fetchPositiveMigrationData();
   negMigData = await fetchNegativeMigrationData(); 
   console.log(negMigData)
+  
   // initialize the map
   var map = L.map('map', {
       center: [51.505, -0.09],
@@ -110,7 +137,7 @@ async function main() {
   
   // add GeoJSON layer to the map
   let geoJsonLayer = L.geoJSON(geoJSONData, {
-      style: {weight: 2},
+      style: style,
       onEachFeature: onEachFeature
   }).addTo(map);
   
